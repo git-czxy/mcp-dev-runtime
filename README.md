@@ -135,6 +135,7 @@ mcp-dev-runtime status
 mcp-dev-runtime doctor
 mcp-dev-runtime doctor --json
 mcp-dev-runtime smoke
+mcp-dev-runtime dashboard
 ```
 
 Status has three output levels:
@@ -151,6 +152,8 @@ mdr tools
 Plain `status` is a short human-readable summary for daily checks. `--verbose` adds process IDs, instance IDs, latency, memory, retained-session/history sizes and Tunnel version. `--json` preserves the complete machine-readable supervisor object for scripts and deep troubleshooting. The long `mcp-dev-runtime` command supports the same flags; from npm use `npm run status -- --json` or `npm run status -- --verbose`.
 
 `mdr paths` shows only the paths actually resolved for the current installation. `mdr config` shows effective **non-secret** settings, and `mdr tools` shows which registered tool policies are enabled. None of these commands prints the contents of `runtime.env`. Add `--json` for machine-readable output.
+
+`mdr dashboard` opens a lightweight browser control panel for the managed runtime. It binds only to `127.0.0.1`, uses a per-process session token for control actions, and exposes status plus start/stop/restart/doctor without adding a desktop framework or runtime dependency. The dashboard is independent of the managed MCP/Tunnel lifecycle, so stopping the remote connection does not remove the control surface. It exits after 10 minutes without browser activity; use `--no-open` to print the local URL without launching a browser, or `--port N` to select a specific loopback port.
 
 New unified configs set `runtime.env_file` to `runtime.env`, so `mcp-dev-runtime up --background` can be used from any directory without putting a secret on the command line. Existing legacy launcher configs keep their previous `env_file` behavior. An explicit `--env-file FILE` remains a temporary override and is resolved from the invoking terminal. Registration itself never reads or changes `runtime.env` and never starts or stops a service.
 

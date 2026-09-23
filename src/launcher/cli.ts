@@ -14,6 +14,7 @@ import { randomUUID } from 'node:crypto';
 import { layout } from './layout.js';
 import { initializeUser } from './initialize.js';
 import { toolPolicies } from '../mcp/tool-registry.js';
+import { serveDashboard } from './dashboard.js';
 const help=`${NAME} ${VERSION}
 Commands:
   init                                Create missing user configuration (binary distribution)
@@ -22,6 +23,7 @@ Commands:
   stop                                Stop only the managed instance
   restart [--background|--bg]         Safely stop, then start the managed instance
   status [--verbose|--json]           Show the managed instance
+  dashboard [--port N] [--no-open]    Open a localhost-only visual control panel
   up                                  Alias for start
   down                                Alias for stop
   doctor [--json] [--offline]          Diagnose the installed runtime and selected configuration
@@ -263,6 +265,31 @@ async function main(){
     const state=await current(o.state_dir);
     console.log(values.json?JSON.stringify(state,null,2):formatStatus(state,o.logs_dir??o.state_dir,values.verbose??false));
     return;
+  }
+  if(command==='dashboard'){
+    const {values}=parseArgs({args,options:{
+      config:{type:'string'},'launcher-config':{type:'string'},'tunnel-bin':{type:'string'},
+      'state-dir':{type:'string'},'logs-dir':{type:'string'},'env-file':{type:'string'},'shell-env':{type:'boolean'},
+      'tunnel-health-port':{type:'string'},'ready-timeout-ms':{type:'string'},port:{type:'string'},'no-open':{type:'boolean'}
+    }});
+    const overrides:Record<string,unknown>={};
+    for(const [flag,key] of [['tunnel-bin','tunnel_bin'],['state-dir','state_dir'],['logs-dir','logs_dir'],['env-file','env_file']] as const){
+      if(values[flag]!==undefined)overrides[key]=path.resolve(values[flag]!);
+    }
+    if(values['shell-env']!==undefined)overrides.shell_env=values['shell-env'];
+    if(values['tunnel-health-port'])overrides.tunnel_health_port=Number(values['tunnel-health-port']);
+    if(values['ready-timeout-ms'])overrides.ready_timeout_ms=Number(values['ready-timeout-ms']);
+    const dashboardPort=values.port===undefined?0:Number(values.port);
+    if(!Number.isInteger(dashboardPort)||dashboardPort<0||dashboardPort>65535)throw new Error('dashboard --port must be an integer from 0 to 65535.');
+    const o=await resolveOptions({configFile:values.config,launcherFile:values['launcher-config'],overrides});
+    const managementArgs:string[]=[];
+    const add=(flag:string,value:string|undefined)=>{if(value!==undefined)managementArgs.push(flag,value);};
+    add('--config',values.config);add('--launcher-config',values['launcher-config']);add('--tunnel-bin',values['tunnel-bin']);
+    add('--state-dir',values['state-dir']);add('--logs-dir',values['logs-dir']);add('--env-file',values['env-file']);
+    if(values['shell-env'])managementArgs.push('--shell-env');add('--tunnel-health-port',values['tunnel-health-port']);add('--ready-timeout-ms',values['ready-timeout-ms']);
+    const doctorArgs:string[]=[];addDoctor('--config',values.config);addDoctor('--launcher-config',values['launcher-config']);
+    function addDoctor(flag:string,value:string|undefined){if(value!==undefined)doctorArgs.push(flag,value);}
+    await serveDashboard({launch:o,managementArgs,doctorArgs,port:dashboardPort,open:values['no-open']!==true});return;
   }
   const {values}=parseArgs({args,options:{
     'launcher-config':{type:'string'},config:{type:'string'},'tunnel-bin':{type:'string'},
