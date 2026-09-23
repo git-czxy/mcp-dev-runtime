@@ -75,6 +75,8 @@ test('dashboard: localhost UI controls an isolated managed runtime without expos
   assert.match(html, /远程连接已开启|远程连接已关闭/);
   assert.match(html, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml">/);
   assert.match(html, /<img class="logo" src="\/favicon\.svg"/);
+  const pageResponse = await fetch(`http://127.0.0.1:${dashboardPort}/`);
+  assert.match(pageResponse.headers.get('content-security-policy') ?? '', /img-src 'self' data:/);
   const favicon = await fetch(`http://127.0.0.1:${dashboardPort}/favicon.svg`);
   assert.equal(favicon.status, 200);
   assert.match(favicon.headers.get('content-type') ?? '', /image\/svg\+xml/);

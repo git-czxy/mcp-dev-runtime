@@ -219,7 +219,7 @@ export async function serveDashboard(options: DashboardOptions) {
           'Content-Length': Buffer.byteLength(html),
           'Cache-Control': 'no-store',
           'X-Content-Type-Options': 'nosniff',
-          'Content-Security-Policy': `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'self'; img-src data:; base-uri 'none'; frame-ancestors 'none'; form-action 'none'`
+          'Content-Security-Policy': `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'; form-action 'none'`
         });
         res.end(html); return;
       }
