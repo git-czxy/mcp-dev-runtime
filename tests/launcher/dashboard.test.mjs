@@ -73,6 +73,14 @@ test('dashboard: localhost UI controls an isolated managed runtime without expos
   });
   assert.match(html, /MCP Dev Runtime/);
   assert.match(html, /远程连接已开启|远程连接已关闭/);
+  assert.match(html, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml">/);
+  assert.match(html, /<img class="logo" src="\/favicon\.svg"/);
+  const favicon = await fetch(`http://127.0.0.1:${dashboardPort}/favicon.svg`);
+  assert.equal(favicon.status, 200);
+  assert.match(favicon.headers.get('content-type') ?? '', /image\/svg\+xml/);
+  const faviconText = await favicon.text();
+  assert.match(faviconText, /#17283f/);
+  assert.match(faviconText, /stroke="#fff"/);
   const token = html.match(/const TOKEN="([a-f0-9]{64})"/)?.[1];
   assert(token, 'dashboard page should contain its per-process API token');
 

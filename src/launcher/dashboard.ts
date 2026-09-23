@@ -20,6 +20,11 @@ type CommandResult = { ok: boolean; code: number | null; stdout: string; stderr:
 const MAX_COMMAND_OUTPUT = 512 * 1024;
 const MAX_REQUEST_BODY = 4096;
 const DASHBOARD_IDLE_MS = 10 * 60 * 1000;
+const DASHBOARD_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="MCP Dev Runtime">
+<rect x="2" y="2" width="60" height="60" rx="14" fill="#17283f"/>
+<path d="M21 22l8 8-8 8" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M32 40h12" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/>
+</svg>`;
 
 function json(res: ServerResponse, status: number, value: unknown) {
   const body = JSON.stringify(value);
@@ -136,11 +141,12 @@ function page(token: string, nonce: string) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MCP Dev Runtime</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>
 :root{color-scheme:light;--ink:#10213d;--muted:#65748b;--line:#dce4ee;--panel:#fff;--page:#f5f7fa;--blue:#2563eb;--blue2:#1d4ed8;--green:#16a34a;--green-bg:#f0faf4;--gray:#8a98ab;--gray-bg:#f5f7fa;--amber:#d97706;--amber-bg:#fff8ed;--red:#c52b37}
 *{box-sizing:border-box}body{margin:0;background:var(--page);font-family:Inter,"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--ink)}
 button,a{font:inherit}.shell{width:min(560px,calc(100vw - 28px));margin:34px auto}.window{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 14px 40px rgba(23,40,67,.08);overflow:hidden}
-.top{display:flex;align-items:center;gap:14px;padding:22px 24px 18px;border-bottom:1px solid #e8edf3}.logo{width:48px;height:48px;border-radius:12px;background:#17283f;color:#fff;display:grid;place-items:center;font:700 25px ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:-4px;padding-right:4px}.title{font-size:22px;font-weight:750;line-height:1.15}.subtitle{font-size:13px;color:var(--muted);margin-top:5px}.version{margin-left:auto;color:var(--muted);font-size:13px}
+.top{display:flex;align-items:center;gap:14px;padding:22px 24px 18px;border-bottom:1px solid #e8edf3}.logo{width:48px;height:48px;display:block;flex:none}.title{font-size:22px;font-weight:750;line-height:1.15}.subtitle{font-size:13px;color:var(--muted);margin-top:5px}.version{margin-left:auto;color:var(--muted);font-size:13px}
 .body{padding:18px}.hero{border:1px solid #e5eaf0;border-radius:14px;padding:24px 20px 18px;background:var(--gray-bg);transition:.2s}.hero.running{background:var(--green-bg)}.hero.recovery{background:var(--amber-bg)}.headline{display:flex;align-items:flex-start;gap:16px}.state-icon{width:45px;height:45px;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--gray);font-size:25px;font-weight:800;flex:none}.running .state-icon{background:var(--green)}.recovery .state-icon{background:var(--amber);border-radius:10px}.h1{font-size:23px;font-weight:780;margin:2px 0 5px}.desc{color:#44536a;font-size:14px;line-height:1.65}.service-grid{display:grid;grid-template-columns:1fr 1fr;margin-top:22px;padding-top:18px;border-top:1px solid rgba(122,139,160,.22)}.service{padding:0 16px}.service:first-child{border-right:1px solid rgba(122,139,160,.22);padding-left:4px}.service-name{font-weight:700;font-size:14px}.service-state{font-weight:750;margin-top:7px}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--gray);margin-right:7px}.dot.ready{background:var(--green)}.dot.degraded{background:var(--amber)}.service-meta{color:var(--muted);font-size:12px;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .actions{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:10px;margin-top:14px}.btn{min-height:46px;border-radius:10px;border:1px solid var(--line);background:#f8fafc;color:var(--ink);font-weight:700;cursor:pointer}.btn:hover{background:#eef3f8}.btn:disabled{opacity:.52;cursor:not-allowed}.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn.primary:hover{background:var(--blue2)}.btn.danger{background:#fff5f5;color:var(--red);border-color:#f3d4d6}.btn.danger:hover{background:#feecec}
 .notice{display:none;margin-top:12px;padding:10px 12px;border-radius:9px;font-size:13px;line-height:1.45;background:#eef4ff;color:#234c93}.notice.show{display:block}.notice.error{background:#fff1f2;color:#9f1f2d}.details{margin-top:16px;border-top:1px solid #e7ecf2;padding-top:4px}details summary{cursor:pointer;list-style:none;padding:14px 2px;color:#33445d;font-weight:650;font-size:14px}details summary::-webkit-details-marker{display:none}details summary:before{content:'⌄';display:inline-block;width:25px;color:#596a82}.detail-grid{display:grid;grid-template-columns:128px 1fr;gap:8px 12px;padding:2px 4px 16px;font-size:12px}.k{color:var(--muted)}.v{overflow-wrap:anywhere}.diag{display:none;background:#0f1e31;color:#dbe6f5;border-radius:10px;padding:12px;margin:0 3px 14px;max-height:180px;overflow:auto;white-space:pre-wrap;font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace}.diag.show{display:block}
@@ -149,7 +155,7 @@ button,a{font:inherit}.shell{width:min(560px,calc(100vw - 28px));margin:34px aut
 </style>
 </head>
 <body><main class="shell"><section class="window">
-<header class="top"><div class="logo">›_</div><div><div class="title">MCP Dev Runtime</div><div class="subtitle">连接 AI 与你的本地开发环境</div></div><div class="version" id="version">v${VERSION}</div></header>
+<header class="top"><img class="logo" src="/favicon.svg" alt=""><div><div class="title">MCP Dev Runtime</div><div class="subtitle">连接 AI 与你的本地开发环境</div></div><div class="version" id="version">v${VERSION}</div></header>
 <div class="body">
   <section class="hero" id="hero"><div class="headline"><div class="state-icon" id="stateIcon">•</div><div><div class="h1" id="headline">正在读取状态…</div><div class="desc" id="description">请稍候。</div></div></div>
     <div class="service-grid"><div class="service"><div class="service-name">MCP 服务</div><div class="service-state"><span class="dot" id="mcpDot"></span><span id="mcpState">未知</span></div><div class="service-meta" id="mcpMeta">—</div></div><div class="service"><div class="service-name">Tunnel 连接</div><div class="service-state"><span class="dot" id="tunnelDot"></span><span id="tunnelState">未知</span></div><div class="service-meta" id="tunnelMeta">—</div></div></div>
@@ -216,6 +222,16 @@ export async function serveDashboard(options: DashboardOptions) {
           'Content-Security-Policy': `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'self'; img-src data:; base-uri 'none'; frame-ancestors 'none'; form-action 'none'`
         });
         res.end(html); return;
+      }
+      if (req.method === 'GET' && req.url === '/favicon.svg') {
+        lastActivity = Date.now();
+        res.writeHead(200, {
+          'Content-Type': 'image/svg+xml; charset=utf-8',
+          'Content-Length': Buffer.byteLength(DASHBOARD_ICON_SVG),
+          'Cache-Control': 'private, max-age=3600',
+          'X-Content-Type-Options': 'nosniff'
+        });
+        res.end(DASHBOARD_ICON_SVG); return;
       }
       if (!req.url?.startsWith('/api/')) { res.writeHead(404); res.end(); return; }
       if (req.headers['x-mdr-dashboard-token'] !== token) { json(res, 403, { error: 'Dashboard session token is missing or invalid.' }); return; }
